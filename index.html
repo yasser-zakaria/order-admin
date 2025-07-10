@@ -53,26 +53,35 @@
     const sheetName = "Form Responses 1";
     const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?sheet=${sheetName}`;
 
-    fetch(url)
-      .then(res => res.text())
-      .then(text => {
-        const json = JSON.parse(text.substr(47).slice(0, -2));
-        const rows = json.table.rows;
+    function fetchOrders() {
+      fetch(url)
+        .then(res => res.text())
+        .then(text => {
+          const json = JSON.parse(text.substr(47).slice(0, -2));
+          const rows = json.table.rows;
 
-        const tbody = document.querySelector("#orders-table tbody");
-        rows.forEach(r => {
-          const cells = r.c.map(c => c ? c.v : "");
-          const tr = document.createElement("tr");
-          cells.slice(0, 4).forEach(cell => {
-            const td = document.createElement("td");
-            td.textContent = cell;
-            tr.appendChild(td);
+          const tbody = document.querySelector("#orders-table tbody");
+          tbody.innerHTML = ""; // امسح الطلبات القديمة
+
+          rows.forEach(r => {
+            const cells = r.c.map(c => c ? c.v : "");
+            const tr = document.createElement("tr");
+            cells.slice(0, 4).forEach(cell => {
+              const td = document.createElement("td");
+              td.textContent = cell;
+              tr.appendChild(td);
+            });
+            tbody.appendChild(tr);
           });
-          tbody.appendChild(tr);
         });
-      });
- // تحديث البيانات كل 30 ثانية
-setInterval(fetchOrders, 30000);
+    }
+
+    // تحميل البيانات عند فتح الصفحة
+    window.onload = () => {
+      fetchOrders();
+      // إعادة التحديث كل 30 ثانية
+      setInterval(fetchOrders, 30000);
+    };
   </script>
 </body>
 </html>
