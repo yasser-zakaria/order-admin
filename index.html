@@ -15,7 +15,7 @@
       color: #333;
       margin-bottom: 20px;
     }
-    select, input[type="text"], input[type="date"] {
+    select, input[type="text"], input[type="date"], button {
       padding: 8px;
       margin: 10px;
       font-size: 16px;
@@ -55,6 +55,11 @@
     <input type="date" id="datePicker">
   </div>
 
+  <div style="margin-top: 15px;">
+    <button onclick="printTable()">🖨️ طباعة الطلبات</button>
+    <button onclick="exportCSV()">📥 تصدير CSV</button>
+  </div>
+
   <table id="orders-table">
     <thead>
       <tr>
@@ -73,6 +78,7 @@
     const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?sheet=${sheetName}`;
 
     let allOrders = [];
+    let filteredOrders = [];
 
     function fetchOrders() {
       fetch(url)
@@ -102,7 +108,7 @@
       const searchKeyword = document.getElementById("summarySearch").value.toLowerCase();
       const selectedDate = document.getElementById("datePicker").value;
 
-      const filtered = allOrders.filter(order => {
+      filteredOrders = allOrders.filter(order => {
         const [time, summary, tableNum] = order;
 
         const matchTable = tableFilter === "all" || tableNum.toString().trim() === tableFilter.trim();
@@ -110,14 +116,14 @@
 
         let matchDate = true;
         if (selectedDate && time instanceof Date) {
-          const orderDateStr = time.toLocaleDateString("en-CA"); // YYYY-MM-DD
+          const orderDateStr = time.toLocaleDateString("en-CA");
           matchDate = orderDateStr === selectedDate;
         }
 
         return matchTable && matchSearch && matchDate;
       });
 
-      filtered.forEach(order => {
+      filteredOrders.forEach(order => {
         const tr = document.createElement("tr");
         order.forEach((cell, idx) => {
           const td = document.createElement("td");
@@ -143,6 +149,61 @@
         option.textContent = t;
         select.appendChild(option);
       });
+    }
+
+    function printTable() {
+      const printWindow = window.open('', '', 'width=900,height=700');
+      const htmlContent = `
+        <html dir="rtl">
+          <head>
+            <title>طباعة الطلبات</title>
+            <style>
+              table { width: 100%; border-collapse: collapse; direction: rtl; font-family: Cairo, sans-serif; }
+              th, td { border: 1px solid #999; padding: 8px; text-align: right; }
+              th { background: #f2a365; color: white; }
+              tr:nth-child(even) { background-color: #f9f9f9; }
+              h2 { text-align: center; }
+            </style>
+          </head>
+          <body>
+            <h2>الطلبات الظاهرة</h2>
+            <table>
+              <thead>
+                <tr><th>🕒 وقت الطلب</th><th>🧾 ملخص الطلب</th><th>🍽 رقم الطاولة</th><th>📌 ملاحظات</th></tr>
+              </thead>
+              <tbody>
+                ${filteredOrders.map(order => `
+                  <tr>
+                    <td>${order[0] instanceof Date ? order[0].toLocaleString("ar-EG") : ''}</td>
+                    <td>${order[1]}</td>
+                    <td>${order[2]}</td>
+                    <td>${order[3]}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </body>
+        </html>
+      `;
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+      printWindow.print();
+    }
+
+    function exportCSV() {
+      let csv = "وقت الطلب,ملخص الطلب,رقم الطاولة,ملاحظات\n";
+      filteredOrders.forEach(order => {
+        const row = order.map((val, i) =>
+          i === 0 && val instanceof Date ? val.toLocaleString("ar-EG") : (val || "")
+        ).join(",");
+        csv += row + "\n";
+      });
+
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "الطلبات.csv";
+      link.click();
     }
 
     window.onload = () => {
