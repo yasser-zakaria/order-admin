@@ -42,6 +42,7 @@
 <body>
   <h2>📋 الطلبات الواردة</h2>
 
+  <!-- الفلاتر -->
   <div>
     <label>فلترة حسب رقم الطاولة:</label>
     <select id="tableFilter">
@@ -55,6 +56,7 @@
     <input type="date" id="datePicker">
   </div>
 
+  <!-- جدول الطلبات -->
   <table id="orders-table">
     <thead>
       <tr>
@@ -74,16 +76,6 @@
 
     let allOrders = [];
 
-    function parseGoogleDate(dateStr) {
-      const match = dateStr.match(/Date\((\d+),(\d+),(\d+),(\d+),(\d+),(\d+)\)/);
-      if (match) {
-        const [_, year, month, day, hour, minute, second] = match.map(Number);
-        const dateObj = new Date(year, month, day, hour, minute, second);
-        return dateObj.toISOString().split('T')[0]; // YYYY-MM-DD
-      }
-      return null;
-    }
-
     function fetchOrders() {
       fetch(url)
         .then(res => res.text())
@@ -91,7 +83,16 @@
           const json = JSON.parse(text.substr(47).slice(0, -2));
           const rows = json.table.rows;
 
-          allOrders = rows.map(r => r.c.map(c => c ? c.v : ""));
+          // نحول الوقت لكائن Date
+          allOrders = rows.map(r => {
+            const timeRaw = r.c[0]?.v;
+            const time = timeRaw ? new Date(timeRaw) : "";
+            const summary = r.c[1]?.v || "";
+            const tableNum = r.c[2]?.v || "";
+            const notes = r.c[3]?.v || "";
+            return [time, summary, tableNum, notes];
+          });
+
           updateTable();
           updateTableFilterOptions();
         });
@@ -106,17 +107,17 @@
       const selectedDate = document.getElementById("datePicker").value;
 
       const filtered = allOrders.filter(order => {
-        const time = order[0] || "";
-        const summary = order[1] || "";
-        const tableNum = order[2] || "";
-        const notes = order[3] || "";
+        const time = order[0];
+        const summary = order[1];
+        const tableNum = order[2];
+        const notes = order[3];
 
-        const matchTable = tableFilter === "all" || tableNum?.toString().trim() === tableFilter.trim();
+        const matchTable = tableFilter === "all" || tableNum.toString().trim() === tableFilter.trim();
         const matchSearch = summary.toLowerCase().includes(searchKeyword);
 
         let matchDate = true;
-        if (selectedDate) {
-          const orderDateStr = parseGoogleDate(time);
+        if (selectedDate && time instanceof Date && !isNaN(time)) {
+          const orderDateStr = time.toLocaleDateString('en-CA'); // "YYYY-MM-DD"
           matchDate = orderDateStr === selectedDate;
         }
 
@@ -125,9 +126,13 @@
 
       filtered.forEach(order => {
         const tr = document.createElement("tr");
-        order.slice(0, 4).forEach(cell => {
+        order.forEach((cell, idx) => {
           const td = document.createElement("td");
-          td.textContent = cell;
+          if (idx === 0 && cell instanceof Date) {
+            td.textContent = cell.toLocaleString("ar-EG");
+          } else {
+            td.textContent = cell;
+          }
           tr.appendChild(td);
         });
         tbody.appendChild(tr);
@@ -149,7 +154,7 @@
 
     window.onload = () => {
       fetchOrders();
-      setInterval(fetchOrders, 30000);
+      setInterval(fetchOrders, 30000); // يحدث الطلبات كل 30 ثانية
 
       document.getElementById("tableFilter").addEventListener("change", updateTable);
       document.getElementById("summarySearch").addEventListener("input", updateTable);
