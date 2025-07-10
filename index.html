@@ -59,6 +59,7 @@
   <h2>📋 الطلبات الواردة</h2>
 
   <div id="alertBox"></div>
+  <audio id="alertSound" src="https://www.soundjay.com/buttons/beep-07.mp3" preload="auto"></audio>
 
   <div>
     <label>فلترة حسب رقم الطاولة:</label>
@@ -114,6 +115,7 @@
             newOrderAlertActive = true;
             document.getElementById("alertBox").classList.add("blinking");
             document.getElementById("stopAlertBtn").style.display = "inline-block";
+            document.getElementById("alertSound").play();
           }
           lastOrderCount = currentOrderCount;
 
