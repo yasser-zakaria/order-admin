@@ -37,6 +37,14 @@
     tr:nth-child(even) {
       background-color: #fff3e0;
     }
+    @keyframes flash {
+      0% { background-color: #f9f9f9; }
+      50% { background-color: #ffe5e5; }
+      100% { background-color: #f9f9f9; }
+    }
+    .new-order {
+      animation: flash 1s infinite;
+    }
   </style>
 </head>
 <body>
@@ -58,6 +66,7 @@
   <div style="margin-top: 15px;">
     <button onclick="printTable()">🖸️ طباعة الطلبات</button>
     <button onclick="exportCSV()">📅 تصدير CSV</button>
+    <button id="stopAlertBtn" onclick="stopNewOrderAlert()" style="display:none; background:red; color:white;">🔕 إيقاف التنبيه</button>
   </div>
 
   <table id="orders-table">
@@ -79,6 +88,8 @@
 
     let allOrders = [];
     let filteredOrders = [];
+    let lastOrderCount = 0;
+    let newOrderAlertActive = false;
 
     function fetchOrders() {
       fetch(url)
@@ -86,6 +97,15 @@
         .then(text => {
           const json = JSON.parse(text.substr(47).slice(0, -2));
           const rows = json.table.rows;
+
+          const currentOrderCount = rows.length;
+
+          if (currentOrderCount > lastOrderCount && !newOrderAlertActive) {
+            newOrderAlertActive = true;
+            document.body.classList.add("new-order");
+            document.getElementById("stopAlertBtn").style.display = "inline-block";
+          }
+          lastOrderCount = currentOrderCount;
 
           allOrders = rows.map(r => {
             let time = r.c[0]?.v;
@@ -103,6 +123,12 @@
           updateTable();
           updateTableFilterOptions();
         });
+    }
+
+    function stopNewOrderAlert() {
+      document.body.classList.remove("new-order");
+      document.getElementById("stopAlertBtn").style.display = "none";
+      newOrderAlertActive = false;
     }
 
     function updateTable() {
@@ -200,8 +226,8 @@
       filteredOrders.forEach(order => {
         const row = order.map((val, i) => {
           let content = i === 0 && val instanceof Date ? val.toLocaleString("ar-EG") : (val || "");
-          content = String(content).replace(/"/g, '""'); // الهروب من علامات التنصيص داخل النص
-          return `"${content}"`; // تغليف كل خلية بعلامات تنصيص
+          content = String(content).replace(/"/g, '""');
+          return `"${content}"`;
         }).join(",");
         csv += row + "\n";
       });
