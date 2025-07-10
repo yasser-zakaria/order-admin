@@ -99,7 +99,7 @@
         const tableNum = order[2] || "";
         const notes = order[3] || "";
 
-        const matchTable = tableFilter === "all" || tableNum === tableFilter;
+        const matchTable = tableFilter === "all" || String(tableNum) === String(tableFilter);
         const matchSearch = summary.toLowerCase().includes(searchKeyword);
 
         return matchTable && matchSearch;
@@ -119,7 +119,7 @@
     function updateTableFilterOptions() {
       const select = document.getElementById("tableFilter");
       const tables = [...new Set(allOrders.map(o => o[2]))].filter(Boolean);
-      
+
       select.innerHTML = '<option value="all">كل الطاولات</option>';
       tables.forEach(t => {
         const option = document.createElement("option");
