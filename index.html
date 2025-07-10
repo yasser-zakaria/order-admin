@@ -198,9 +198,11 @@
     function exportCSV() {
       let csv = "وقت الطلب,ملخص الطلب,رقم الطاولة,ملاحظات\n";
       filteredOrders.forEach(order => {
-        const row = order.map((val, i) =>
-          i === 0 && val instanceof Date ? val.toLocaleString("ar-EG") : (val || "")
-        ).join(",");
+        const row = order.map((val, i) => {
+          let content = i === 0 && val instanceof Date ? val.toLocaleString("ar-EG") : (val || "");
+          content = String(content).replace(/"/g, '""'); // الهروب من علامات التنصيص داخل النص
+          return `"${content}"`; // تغليف كل خلية بعلامات تنصيص
+        }).join(",");
         csv += row + "\n";
       });
 
