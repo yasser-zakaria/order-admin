@@ -51,8 +51,6 @@
 <body>
   <h2>📋 الطلبات الواردة</h2>
 
-  <audio id="alertSound" src="https://www.soundjay.com/buttons/beep-07.mp3" preload="auto"></audio>
-
   <div>
     <label>فلترة حسب رقم الطاولة:</label>
     <select id="tableFilter">
@@ -107,7 +105,6 @@
             newOrderAlertActive = true;
             document.body.classList.add("alerting");
             document.getElementById("stopAlertBtn").style.display = "inline-block";
-            document.getElementById("alertSound").play();
           }
           lastOrderCount = currentOrderCount;
 
@@ -250,11 +247,6 @@
       document.getElementById("tableFilter").addEventListener("change", updateTable);
       document.getElementById("summarySearch").addEventListener("input", updateTable);
       document.getElementById("datePicker").addEventListener("change", updateTable);
-
-      // السماح بتشغيل الصوت بعد أول تفاعل من المستخدم
-      document.body.addEventListener("click", () => {
-        document.getElementById("alertSound").play().catch(() => {});
-      }, { once: true });
     };
   </script>
 </body>
