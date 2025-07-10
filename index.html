@@ -108,8 +108,7 @@
 
         let matchDate = true;
         if (selectedDate) {
-          const orderDate = new Date(time);
-          const orderDateStr = orderDate.toISOString().split('T')[0];
+          const orderDateStr = time.split(' ')[0]; // ناخد التاريخ من النص
           matchDate = orderDateStr === selectedDate;
         }
 
@@ -142,7 +141,7 @@
 
     window.onload = () => {
       fetchOrders();
-      setInterval(fetchOrders, 30000);
+      setInterval(fetchOrders, 30000); // يحدث الطلبات كل 30 ثانية
 
       document.getElementById("tableFilter").addEventListener("change", updateTable);
       document.getElementById("summarySearch").addEventListener("input", updateTable);
