@@ -250,6 +250,11 @@
       document.getElementById("tableFilter").addEventListener("change", updateTable);
       document.getElementById("summarySearch").addEventListener("input", updateTable);
       document.getElementById("datePicker").addEventListener("change", updateTable);
+
+      // السماح بتشغيل الصوت بعد أول تفاعل من المستخدم
+      document.body.addEventListener("click", () => {
+        document.getElementById("alertSound").play().catch(() => {});
+      }, { once: true });
     };
   </script>
 </body>
