@@ -15,7 +15,7 @@
       color: #333;
       margin-bottom: 20px;
     }
-    select, input[type="text"] {
+    select, input[type="text"], input[type="date"] {
       padding: 8px;
       margin: 10px;
       font-size: 16px;
@@ -51,6 +51,9 @@
 
     <label>بحث في ملخص الطلب:</label>
     <input type="text" id="summarySearch" placeholder="اكتب كلمة...">
+
+    <label>تاريخ الطلب:</label>
+    <input type="date" id="datePicker">
   </div>
 
   <!-- الجدول -->
@@ -92,15 +95,25 @@
 
       const tableFilter = document.getElementById("tableFilter").value;
       const searchKeyword = document.getElementById("summarySearch").value.toLowerCase();
+      const selectedDate = document.getElementById("datePicker").value; // yyyy-mm-dd
 
       const filtered = allOrders.filter(order => {
+        const time = order[0] || "";
         const summary = order[1] || "";
         const tableNum = order[2] || "";
+        const notes = order[3] || "";
 
         const matchTable = tableFilter === "all" || tableNum?.toString().trim() === tableFilter.trim();
         const matchSearch = summary.toLowerCase().includes(searchKeyword);
 
-        return matchTable && matchSearch;
+        let matchDate = true;
+        if (selectedDate) {
+          const orderDate = new Date(time);
+          const orderDateStr = orderDate.toISOString().split('T')[0];
+          matchDate = orderDateStr === selectedDate;
+        }
+
+        return matchTable && matchSearch && matchDate;
       });
 
       filtered.forEach(order => {
@@ -133,6 +146,7 @@
 
       document.getElementById("tableFilter").addEventListener("change", updateTable);
       document.getElementById("summarySearch").addEventListener("input", updateTable);
+      document.getElementById("datePicker").addEventListener("change", updateTable);
     };
   </script>
 </body>
