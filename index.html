@@ -74,16 +74,6 @@
 
     let allOrders = [];
 
-    // دالة لتحويل Date(2025,6,10,14,22,3) إلى كائن تاريخ حقيقي
-    function parseGoogleDate(str) {
-      const match = str.match(/Date\((\d+),(\d+),(\d+),(\d+),(\d+),(\d+)\)/);
-      if (match) {
-        const [_, year, month, day, hour, minute, second] = match.map(Number);
-        return new Date(year, month, day, hour, minute, second);
-      }
-      return null;
-    }
-
     function fetchOrders() {
       fetch(url)
         .then(res => res.text())
@@ -92,8 +82,7 @@
           const rows = json.table.rows;
 
           allOrders = rows.map(r => {
-            const rawDate = r.c[0]?.v;
-            const time = typeof rawDate === "string" ? parseGoogleDate(rawDate) : null;
+            const time = r.c[0]?.v instanceof Date ? r.c[0].v : null;
             const summary = r.c[1]?.v || "";
             const tableNum = r.c[2]?.v || "";
             const notes = r.c[3]?.v || "";
@@ -114,17 +103,14 @@
       const selectedDate = document.getElementById("datePicker").value;
 
       const filtered = allOrders.filter(order => {
-        const time = order[0];
-        const summary = order[1];
-        const tableNum = order[2];
-        const notes = order[3];
+        const [time, summary, tableNum] = order;
 
         const matchTable = tableFilter === "all" || tableNum.toString().trim() === tableFilter.trim();
         const matchSearch = summary.toLowerCase().includes(searchKeyword);
 
         let matchDate = true;
-        if (selectedDate && time instanceof Date && !isNaN(time)) {
-          const orderDateStr = time.toLocaleDateString('en-CA'); // YYYY-MM-DD
+        if (selectedDate && time instanceof Date) {
+          const orderDateStr = time.toLocaleDateString("en-CA"); // YYYY-MM-DD
           matchDate = orderDateStr === selectedDate;
         }
 
