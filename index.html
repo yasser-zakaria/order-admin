@@ -13,7 +13,15 @@
     }
     h2 {
       color: #333;
-      margin-bottom: 30px;
+      margin-bottom: 20px;
+    }
+    .filters {
+      margin-bottom: 20px;
+    }
+    select, input[type="date"] {
+      padding: 10px;
+      margin: 5px;
+      font-size: 16px;
     }
     table {
       width: 100%;
@@ -36,6 +44,17 @@
 </head>
 <body>
   <h2>📋 الطلبات الواردة</h2>
+
+  <div class="filters">
+    <label>فلتر الطاولة:</label>
+    <select id="table-filter">
+      <option value="">الكل</option>
+    </select>
+
+    <label>فلتر التاريخ:</label>
+    <input type="date" id="date-filter" />
+  </div>
+
   <table id="orders-table">
     <thead>
       <tr>
@@ -53,6 +72,59 @@
     const sheetName = "Form Responses 1";
     const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?sheet=${sheetName}`;
 
+    let allRows = [];
+
+    function formatDate(d) {
+      const date = new Date(d);
+      return date.toISOString().split("T")[0];
+    }
+
+    function populateFilters() {
+      const tableSet = new Set();
+      allRows.forEach(row => {
+        const tableNum = row[2];
+        if (tableNum) tableSet.add(tableNum);
+      });
+
+      const tableFilter = document.getElementById("table-filter");
+      tableFilter.innerHTML = `<option value="">الكل</option>`;
+      tableSet.forEach(num => {
+        const opt = document.createElement("option");
+        opt.value = num;
+        opt.textContent = num;
+        tableFilter.appendChild(opt);
+      });
+
+      // اضبط التاريخ الحالي تلقائيًا في الفلتر
+      document.getElementById("date-filter").value = formatDate(new Date());
+    }
+
+    function renderTable() {
+      const tableFilterVal = document.getElementById("table-filter").value;
+      const dateFilterVal = document.getElementById("date-filter").value;
+
+      const tbody = document.querySelector("#orders-table tbody");
+      tbody.innerHTML = "";
+
+      allRows.forEach(row => {
+        const [timestamp, summary, table, notes] = row;
+        const dateOnly = formatDate(timestamp);
+
+        const matchesTable = tableFilterVal === "" || table === tableFilterVal;
+        const matchesDate = dateFilterVal === "" || dateOnly === dateFilterVal;
+
+        if (matchesTable && matchesDate) {
+          const tr = document.createElement("tr");
+          [timestamp, summary, table, notes].forEach(cell => {
+            const td = document.createElement("td");
+            td.textContent = cell;
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+        }
+      });
+    }
+
     function fetchOrders() {
       fetch(url)
         .then(res => res.text())
@@ -60,27 +132,18 @@
           const json = JSON.parse(text.substr(47).slice(0, -2));
           const rows = json.table.rows;
 
-          const tbody = document.querySelector("#orders-table tbody");
-          tbody.innerHTML = ""; // امسح الطلبات القديمة
-
-          rows.forEach(r => {
-            const cells = r.c.map(c => c ? c.v : "");
-            const tr = document.createElement("tr");
-            cells.slice(0, 4).forEach(cell => {
-              const td = document.createElement("td");
-              td.textContent = cell;
-              tr.appendChild(td);
-            });
-            tbody.appendChild(tr);
-          });
+          allRows = rows.map(r => r.c.map(c => c ? c.v : ""));
+          populateFilters();
+          renderTable();
         });
     }
 
-    // تحميل البيانات عند فتح الصفحة
+    document.getElementById("table-filter").addEventListener("change", renderTable);
+    document.getElementById("date-filter").addEventListener("change", renderTable);
+
     window.onload = () => {
       fetchOrders();
-      // إعادة التحديث كل 30 ثانية
-      setInterval(fetchOrders, 30000);
+      setInterval(fetchOrders, 30000); // تحديث كل 30 ثانية
     };
   </script>
 </body>
