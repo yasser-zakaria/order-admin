@@ -2,99 +2,91 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>لوحة تحكم الطلبات</title>
+  <title>لوحة الطلبات</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       font-family: 'Cairo', sans-serif;
-      background-color: #f9f9f9;
+      background: #fefefe;
       padding: 20px;
-      direction: rtl;
       text-align: center;
     }
     h2 {
-      color: #2c3e50;
+      color: #333;
       margin-bottom: 20px;
     }
     table {
       width: 100%;
-      max-width: 1000px;
-      margin: auto;
       border-collapse: collapse;
-      background-color: #fff;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      direction: rtl;
     }
     th, td {
-      border: 1px solid #ddd;
       padding: 12px;
+      border: 1px solid #ddd;
+      text-align: right;
     }
     th {
-      background-color: #ffcc80;
-      color: #000;
+      background-color: #f8b500;
+      color: white;
     }
     tr:nth-child(even) {
-      background-color: #fafafa;
+      background-color: #f9f9f9;
     }
-    .refresh-btn {
-      margin: 20px;
-      padding: 10px 20px;
-      background-color: #4caf50;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      cursor: pointer;
+    @media (max-width: 768px) {
+      table, thead, tbody, th, td, tr {
+        display: block;
+      }
+      th {
+        text-align: center;
+      }
     }
   </style>
 </head>
 <body>
 
-<h2>📋 لوحة تحكم الطلبات</h2>
-
-<button class="refresh-btn" onclick="loadData()">🔄 تحديث البيانات</button>
-
+<h2>📋 لوحة متابعة الطلبات</h2>
 <table id="orders-table">
   <thead>
     <tr>
-      <th>🪑 رقم الطاولة</th>
+      <th>🕒 وقت الطلب</th>
       <th>🧾 ملخص الطلب</th>
-      <th>📝 الملاحظات</th>
-      <th>⏱️ وقت الإرسال</th>
+      <th>🪑 رقم الطاولة</th>
+      <th>📌 ملاحظات</th>
     </tr>
   </thead>
   <tbody>
-    <tr><td colspan="4">جاري التحميل...</td></tr>
+    <tr><td colspan="4">جاري تحميل البيانات...</td></tr>
   </tbody>
 </table>
 
 <script>
-  function loadData() {
-    const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRz8QcPW4FAPFtBeo4VD26pFY65_ABZv0nulu1_4bH5FNg1J5zY8P11GgW5gilJxFJbFsK3g3gsWwSw/pub?output=csv";
-    fetch(sheetURL)
-      .then(res => res.text())
-      .then(data => {
-        const rows = data.split("\n").slice(1); // skip header
-        const tbody = document.querySelector("#orders-table tbody");
-        tbody.innerHTML = "";
-        rows.forEach(row => {
-          const cols = row.split(",").map(cell => cell.replace(/"/g, ""));
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${cols[1] || ""}</td> <!-- رقم الطاولة -->
-            <td>${(cols[0] || "").replace(/\n/g, "<br>")}</td> <!-- ملخص الطلب -->
-            <td>${cols[2] || ""}</td> <!-- الملاحظات -->
-            <td>${cols[3] || ""}</td> <!-- وقت الإرسال -->
-          `;
-          tbody.appendChild(tr);
-        });
-      })
-      .catch(() => {
-        document.querySelector("#orders-table tbody").innerHTML =
-          `<tr><td colspan="4">❌ فشل تحميل البيانات</td></tr>`;
-      });
-  }
+  const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRz8QcPW4FAPFtBeo4VD26pFY65_ABZv0nulu1_4bH5FNg1J5zY8P11GgW5gilJxFJbFsK3g3gsWwSw/pub?output=csv";
 
-  window.onload = loadData;
+  fetch(csvUrl)
+    .then(res => res.text())
+    .then(data => {
+      const rows = data.trim().split("\n").slice(1); // استبعاد أول صف (العناوين)
+      const tableBody = document.querySelector("#orders-table tbody");
+      tableBody.innerHTML = "";
+
+      rows.forEach(row => {
+        const cols = row.split(",").map(cell => cell.replace(/"/g, ""));
+        const tr = document.createElement("tr");
+
+        // ترتيب الأعمدة: وقت، ملخص، رقم الطاولة، ملاحظات
+        tr.innerHTML = `
+          <td>${cols[0]}</td>
+          <td>${cols[1].replace(/\n/g, "<br>")}</td>
+          <td>${cols[2]}</td>
+          <td>${cols[3]}</td>
+        `;
+        tableBody.appendChild(tr);
+      });
+    })
+    .catch(err => {
+      document.querySelector("#orders-table tbody").innerHTML = "<tr><td colspan='4'>حدث خطأ في تحميل البيانات</td></tr>";
+      console.error(err);
+    });
 </script>
 
 </body>
