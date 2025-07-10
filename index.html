@@ -37,18 +37,28 @@
     tr:nth-child(even) {
       background-color: #fff3e0;
     }
-    @keyframes flash {
-      0% { background-color: #f9f9f9; }
-      50% { background-color: #ffe5e5; }
-      100% { background-color: #f9f9f9; }
+    #alertBox {
+      width: 30px;
+      height: 30px;
+      border-radius: 5px;
+      margin: 10px auto;
+      display: none;
     }
-    .new-order {
-      animation: flash 1s infinite;
+    @keyframes blink {
+      0% { background-color: #f00; }
+      50% { background-color: #fff; }
+      100% { background-color: #f00; }
+    }
+    .blinking {
+      display: block !important;
+      animation: blink 1s infinite;
     }
   </style>
 </head>
 <body>
   <h2>📋 الطلبات الواردة</h2>
+
+  <div id="alertBox"></div>
 
   <div>
     <label>فلترة حسب رقم الطاولة:</label>
@@ -102,7 +112,7 @@
 
           if (currentOrderCount > lastOrderCount && !newOrderAlertActive) {
             newOrderAlertActive = true;
-            document.body.classList.add("new-order");
+            document.getElementById("alertBox").classList.add("blinking");
             document.getElementById("stopAlertBtn").style.display = "inline-block";
           }
           lastOrderCount = currentOrderCount;
@@ -126,7 +136,7 @@
     }
 
     function stopNewOrderAlert() {
-      document.body.classList.remove("new-order");
+      document.getElementById("alertBox").classList.remove("blinking");
       document.getElementById("stopAlertBtn").style.display = "none";
       newOrderAlertActive = false;
     }
