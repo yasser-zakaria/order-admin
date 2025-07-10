@@ -42,7 +42,6 @@
 <body>
   <h2>📋 الطلبات الواردة</h2>
 
-  <!-- الفلاتر -->
   <div>
     <label>فلترة حسب رقم الطاولة:</label>
     <select id="tableFilter">
@@ -56,7 +55,6 @@
     <input type="date" id="datePicker">
   </div>
 
-  <!-- جدول الطلبات -->
   <table id="orders-table">
     <thead>
       <tr>
@@ -75,6 +73,16 @@
     const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?sheet=${sheetName}`;
 
     let allOrders = [];
+
+    function parseGoogleDate(dateStr) {
+      const match = dateStr.match(/Date\((\d+),(\d+),(\d+),(\d+),(\d+),(\d+)\)/);
+      if (match) {
+        const [_, year, month, day, hour, minute, second] = match.map(Number);
+        const dateObj = new Date(year, month, day, hour, minute, second);
+        return dateObj.toISOString().split('T')[0]; // YYYY-MM-DD
+      }
+      return null;
+    }
 
     function fetchOrders() {
       fetch(url)
@@ -95,7 +103,7 @@
 
       const tableFilter = document.getElementById("tableFilter").value;
       const searchKeyword = document.getElementById("summarySearch").value.toLowerCase();
-      const selectedDate = document.getElementById("datePicker").value; // بصيغة yyyy-mm-dd
+      const selectedDate = document.getElementById("datePicker").value;
 
       const filtered = allOrders.filter(order => {
         const time = order[0] || "";
@@ -108,9 +116,7 @@
 
         let matchDate = true;
         if (selectedDate) {
-          // تحويل التاريخ من "MM/DD/YYYY" إلى "YYYY-MM-DD"
-          const [month, day, year] = time.split(' ')[0].split('/');
-          const orderDateStr = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+          const orderDateStr = parseGoogleDate(time);
           matchDate = orderDateStr === selectedDate;
         }
 
@@ -143,7 +149,7 @@
 
     window.onload = () => {
       fetchOrders();
-      setInterval(fetchOrders, 30000); // يحدث كل 30 ثانية
+      setInterval(fetchOrders, 30000);
 
       document.getElementById("tableFilter").addEventListener("change", updateTable);
       document.getElementById("summarySearch").addEventListener("input", updateTable);
