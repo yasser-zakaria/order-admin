@@ -56,8 +56,8 @@
   </div>
 
   <div style="margin-top: 15px;">
-    <button onclick="printTable()">🖨️ طباعة الطلبات</button>
-    <button onclick="exportCSV()">📥 تصدير CSV</button>
+    <button onclick="printTable()">🖸️ طباعة الطلبات</button>
+    <button onclick="exportCSV()">📅 تصدير CSV</button>
   </div>
 
   <table id="orders-table">
@@ -88,7 +88,12 @@
           const rows = json.table.rows;
 
           allOrders = rows.map(r => {
-            const time = r.c[0]?.v instanceof Date ? r.c[0].v : null;
+            let time = r.c[0]?.v;
+            if (typeof time === "string" && time.startsWith("Date(")) {
+              const parts = time.match(/\d+/g).map(Number);
+              time = new Date(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5]);
+            }
+
             const summary = r.c[1]?.v || "";
             const tableNum = r.c[2]?.v || "";
             const notes = r.c[3]?.v || "";
