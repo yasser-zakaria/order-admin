@@ -2,90 +2,75 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>لوحة إدارة الطلبات</title>
+  <title>عرض الطلبات</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       font-family: 'Cairo', sans-serif;
-      background: #fdf6e3;
-      padding: 20px;
+      background-color: #f9f9f9;
+      padding: 30px;
       text-align: center;
     }
     h2 {
       color: #333;
-      margin-bottom: 20px;
+      margin-bottom: 30px;
     }
     table {
+      width: 100%;
       border-collapse: collapse;
-      margin: auto;
-      width: 95%;
-      background: white;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      direction: rtl;
     }
     th, td {
       padding: 12px;
       border: 1px solid #ddd;
+      text-align: right;
     }
     th {
-      background-color: #f0c674;
-      color: #000;
+      background-color: #f2a365;
+      color: white;
     }
     tr:nth-child(even) {
-      background-color: #fdf1d1;
-    }
-    .error {
-      color: red;
-      margin-top: 20px;
+      background-color: #fff3e0;
     }
   </style>
 </head>
 <body>
-
-  <h2>📋 قائمة الطلبات الواردة</h2>
-  <div id="table-container">جارٍ تحميل البيانات...</div>
-  <div id="error-message" class="error"></div>
+  <h2>📋 الطلبات الواردة</h2>
+  <table id="orders-table">
+    <thead>
+      <tr>
+        <th>🕒 وقت الطلب</th>
+        <th>🧾 ملخص الطلب</th>
+        <th>🍽 رقم الطاولة</th>
+        <th>📌 ملاحظات</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
   <script>
-    const csvUrl = "https://docs.google.com/spreadsheets/d/1bq1d1JsNjUTPjZmAGAGe8a8M8kPeS4dKA0ZW1ucL9fc/gviz/tq?tqx=out:csv&sheet=Form%20Responses%201";
+    const sheetID = "1bq1d1JsNjUTPjZmAGAGe8a8M8kPeS4dKA0ZW1ucL9fc";
+    const sheetName = "Form Responses 1";
+    const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?sheet=${sheetName}`;
 
-    function parseCSV(text) {
-      const rows = text.trim().split("\n").map(row => {
-        return row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(cell =>
-          cell.replace(/^"|"$/g, "").replace(/""/g, '"')
-        );
-      });
-      return rows;
-    }
-
-    function renderTable(data) {
-      let html = "<table><thead><tr><th>⏰ وقت الطلب</th><th>🧾 ملخص الطلب</th><th>🍽️ رقم الطاولة</th><th>📝 الملاحظات</th></tr></thead><tbody>";
-      for (let i = 1; i < data.length; i++) {
-        const [time, summary, tableNum, notes] = data[i];
-        html += `<tr>
-          <td>${time || "-"}</td>
-          <td style="text-align: right; white-space: pre-line;">${summary || "-"}</td>
-          <td>${tableNum || "-"}</td>
-          <td style="white-space: pre-line;">${notes || "-"}</td>
-        </tr>`;
-      }
-      html += "</tbody></table>";
-      document.getElementById("table-container").innerHTML = html;
-    }
-
-    fetch(csvUrl)
-      .then(res => {
-        if (!res.ok) throw new Error("فشل في تحميل البيانات");
-        return res.text();
-      })
+    fetch(url)
+      .then(res => res.text())
       .then(text => {
-        const data = parseCSV(text);
-        if (data.length < 2) throw new Error("لا توجد بيانات متاحة بعد");
-        renderTable(data);
-      })
-      .catch(err => {
-        document.getElementById("error-message").textContent = "⚠️ حدث خطأ أثناء تحميل البيانات: " + err.message;
+        const json = JSON.parse(text.substr(47).slice(0, -2));
+        const rows = json.table.rows;
+
+        const tbody = document.querySelector("#orders-table tbody");
+        rows.forEach(r => {
+          const cells = r.c.map(c => c ? c.v : "");
+          const tr = document.createElement("tr");
+          cells.slice(0, 4).forEach(cell => {
+            const td = document.createElement("td");
+            td.textContent = cell;
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+        });
       });
   </script>
-
 </body>
 </html>
